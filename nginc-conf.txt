@@ -1,0 +1,206 @@
+NGINX-Hosting customized web server
+---------------------------------------------------------
+ events {}
+
+http {
+                include mime.types;
+
+        server {
+
+                listen 80;
+                server_name 15.206.68.45;
+                root /usr/share/nginx/html;
+        }
+    }
+============================================
+events {}
+
+http {
+                types{
+		text/html html;
+		text/css css;
+	}
+
+        server {
+
+                listen 80;
+                server_name 15.206.68.45;
+                root /usr/share/nginx/html;
+        }
+    }
+===================================================================
+NGINX Location Blocks
+------------------------------------------------------------------
+events {}
+
+http {
+        include mime.types;
+
+        server {
+
+                listen 80;
+                server_name 15.206.68.45;
+                root /home/ubuntu/demo;
+
+# prefix match
+#       location /greet {
+#                       return 200 'Hello nginx reponse "/gret" location';
+#                      }
+# exact match
+#        location =/greet {
+#                      return 200 'Hello nginx reponse "/gret" - Exact location';
+#                      }
+#
+#Regukar expression match
+#       location ~ /greet[0-9] {
+#                       return 200 'Hello nginx reponse "/gret" Regex location';
+#                       }
+#Regukar expression with CASE INSENSITIVE
+
+         location ~* /greet {
+                       return 200 'Hello nginx reponse "/gret" REGEX location with CASE INSENSITIVE';
+                      }
+#preferential prefix match
+       location ^~ /greet2 {
+                       return 200 'Hello nginx reponse "/gret" preferential location';
+                      }
+                }
+         }
+
+==========================================================================
+rewrite the file using try_files
+-------------------------------------------------------------------------
+http {
+        include mime.types;
+
+        server {
+
+                listen 80;
+                server_name 15.206.68.45;
+                root /home/ubuntu/demo;
+
+                 try_files /thumb.png /greet;
+location /greet {
+                        return 200 'Hello world';
+                      }
+                }
+        }
+============================================================================
+try_files 
+-----------------------------------------------------------------------------
+worker_processes auto;   # customise the worker process if needed
+events {
+        worker_connections 1024; #limit of requests hitting Nginx server
+}
+
+http {
+        include mime.types;
+
+        server {
+
+                listen 80;
+                server_name 15.206.68.45;
+                root /home/ubuntu/demo;
+
+                 try_files $uri /cat.png /greet /friendly_404;       # will not caz not cat.png is there and greet is not the post step location
+									 but friendly_404 works caz its post step location.
+
+        location /friendly_404 {
+                        return 404 'sorry file not found';
+                      }
+
+
+ location /greet {
+                        return 200 'Hello world';
+                      }
+                }
+        }
+===================================================================================
+To  Work on revers proxy or dynamic web pages with regards to PHP install
+	apt-get install php-fpm
+
+to check the versioin of php-fpm
+	systemctl list-units | grep php
+
+
+to check whether its running 
+systemctl status php7.4-fpm #respect to version name 
+
+to check the limit of woeker_connections 
+ulimit -n
+
+to set the path of pid
+pid <path-to-set/name.pid>
+
+======================================================
+nginx serve --host 0.0.0.0
+=======================================================
+reverse proxy:with respect to node js
+--------------------------------------------------
+
+ events {}
+
+http {
+                include mime.types; #mainatins css resolution
+
+server {
+        listen 80;
+
+        server_name 52.66.135.163; #ip-address
+
+location /{
+                proxy_pass http://localhost:3000/;  ## this line will listen from port 80 as well as 3000 because of REVERSE PROXY
+        }
+}
+}
+======================================================================
+Nginx-Load-balancer /etc/nginx/nginx.conf
+
+--------------------------------------------------------------------
+apt install php7.4-cli ## to install php
+
+create 3 php files:
+echo 'PHP Server 1' > s1
+echo 'PHP Server 2' > s2
+echo 'PHP Server 3' > s3
+cat s1 s2 s3
+php -S localhost:10001 s1 ## creating a development server to run the s1 on localhost
+php -S localhost:10002 s2
+php -S localhost:10003 s3
+
+Create a Nginx.conf file /etc/nginx/nginx.conf
+
+ events {}
+
+http {						## contains directives for handling web traffic
+                include mime.types;
+
+        upstream php_servers			##upstream defines a cluster that you can proxy requests to: commonly used for load balncing
+	{
+        	server localhost:10001;
+        	server localhost:10002;
+	        server localhost:10003;
+	}
+
+server {
+	        listen 80;
+        	server_name 52.66.135.163;
+
+		location /{
+		                proxy_pass http://php_servers; ##passing upstream-name so that it can run localhost 10001,10002,10003 in round robbin manner
+        		  }
+	}	
+}
+
+
+ curl http://localhost:80	 ## to check whether my php server is uo and working
+
+ while sleep 1; do curl http://localhost:80; done                   ## write a ehile loop to understand the execution of load balancer
+
+curl I http://localhost:80 	## to check the hostname
+
+
+
+
+
+
